@@ -1,7 +1,7 @@
 # Manufacturing Analytics Platform
 log in code 
 Username and Password
-Ask 
+Ask on stephen.kiss.business@gmail.com
 
 An enterprise-grade manufacturing analytics system with a FastAPI + PostgreSQL
 backend and a responsive Chart.js dashboard — production monitoring, OEE,
