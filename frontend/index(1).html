@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Manufacturing Analytics Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  :root{
+    --bg:#14171a;
+    --panel:#1b1f23;
+    --panel-raised:#20252a;
+    --line:#31373d;
+    --line-soft:#262b30;
+    --text:#e9e6de;
+    --text-muted:#8b9198;
+    --amber:#f2a63a;
+    --amber-dim:#7a5a26;
+    --red:#e0483c;
+    --green:#4fa876;
+    --blue:#4f8fe0;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 800px at 15% -10%, #1c2126 0%, var(--bg) 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--amber); color:#1a1300; }
+
+/* ============================= LOGIN SCREEN ============================= */
+ #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:36px 32px 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .login-card::before{
+    content:"";
+    position:absolute; top:0; left:0; right:0; height:3px;
+    background:repeating-linear-gradient(90deg,var(--amber) 0 14px, transparent 14px 20px);
+    opacity:.8;
+  }
+  .login-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .login-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 4px;
+    letter-spacing:-.01em;
+  }
+  .login-sub{
+    color:var(--text-muted);
+    font-size:13px;
+    margin:0 0 26px;
+    line-height:1.5;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    background:#121517;
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    padding:11px 12px;
+    border-radius:var(--radius);
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus{ border-color:var(--amber); }
+  .btn{
+    width:100%;
+    background:var(--amber);
+    color:#1a1300;
+    border:none;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:.02em;
+    padding:12px;
+    border-radius:var(--radius);
+    cursor:pointer;
+    transition:filter .15s, transform .05s;
+    margin-top:6px;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:translateY(1px); }
+  .btn:focus-visible, a:focus-visible, input:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+  .login-error{
+    color:var(--red);
+    font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace;
+    margin-top:12px;
+    min-height:16px;
+  }
+  .login-demo{
+    margin-top:22px;
+    padding-top:18px;
+    border-top:1px solid var(--line-soft);
+    font-size:11.5px;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;
+    line-height:1.7;
+  }
+  .login-demo b{ color:var(--text); }
+  .login-demo button{
+    background:none;border:none;color:var(--blue);cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-decoration:underline;
+    padding:0;
+  }
+
+/* ============================= APP SHELL ============================= */
+</style>
+
+<!-- ============================= LOGIN SCREEN ============================= -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div class="login-eyebrow">Manufacturing Analytics Platform</div>
+    <h1 class="login-title">Sign in</h1>
+    <p class="login-sub">Access operational dashboards, machine health, and production insights.</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="login-username">Username</label>
+        <input id="login-username" name="username" type="text" autocomplete="username" placeholder="Admin" required />
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••" required />
+      </div>
+      <button type="submit" class="btn">Sign in</button>
+      <div id="login-error" class="login-error"></div>
+    </form>
+
+    <div class="login-demo">
+      <div><b>Demo accounts</b></div>
+      <div>Admin · Admin123!</div>
+      <div>Manager · Manager123!</div>
+      <div>Technician · Tech123!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= APP SHELL ============================= -->
+<div id="app-shell" class="app-shell hidden">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">MA</div>
+      <div class="brand-name-sm">MAP</div>
+    </div>
+
+    <nav class="nav-groups" id="nav-groups">
+      <div class="nav-group-label">Overview</div>
+      <a class="nav-link active" data-view="production-dashboard">Production Dashboard</a>
+      <a class="nav-link" data-view="machine-performance">Machine Performance</a>
+      <a class="nav-link" data-view="oee">OEE</a>
+
+      <div class="nav-group-label">Reliability</div>
+      <a class="nav-link" data-view="downtime-analysis">Downtime Analysis</a>
+      <a class="nav-link" data-view="predictive-maintenance">Predictive Maintenance</a>
+      <a class="nav-link" data-view="maintenance-history">Maintenance History</a>
+      <a class="nav-link" data-view="failure-analysis">Failure Analysis</a>
+
+      <div class="nav-group-label">Performance</div>
+      <a class="nav-link" data-view="efficiency-reports">Efficiency Reports</a>
+      <a class="nav-link" data-view="shift-performance">Shift Performance</a>
+      <a class="nav-link" data-view="quality">Scrap &amp; Quality</a>
+
+      <div class="nav-group-label">Data</div>
+      <a class="nav-link" data-view="machines-admin">Machines &amp; Lines</a>
+      <a class="nav-link" data-view="reports">Reports &amp; Export</a>
+      <a class="nav-link" data-view="users-admin" id="nav-users-admin">Users</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div>
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button id="logout-btn" class="btn btn-ghost btn-block">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <header class="topbar">
+      <button id="sidebar-toggle" class="icon-btn mobile-only" aria-label="Toggle navigation">☰</button>
+      <div class="topbar-title" id="view-title">Production Dashboard</div>
+
+      <div class="topbar-filters" id="global-filters">
+        <select id="filter-range" class="field-select">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last 12 months</option>
+        </select>
+        <select id="filter-line" class="field-select">
+          <option value="">All Lines</option>
+        </select>
+        <select id="filter-machine" class="field-select">
+          <option value="">All Machines</option>
+        </select>
+        <input id="filter-search" class="field-input filter-search" type="search" placeholder="Search…" />
+      </div>
+
+      <div class="topbar-status">
+        <span class="status-dot status-live"></span> Live
+      </div>
+    </header>
+
+    <main class="view-container" id="view-container">
+      <!-- Views injected by js/views.js -->
+    </main>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script>
+  // ── Backend connection mode ────────────────────────────────────────────
+  // DEMO MODE (default): the whole app runs in your browser with realistic
+  // sample data. No backend, no deployment, no setup — just open this file.
+  //
+  // To connect a REAL backend once you've deployed one (see README):
+  //   1. Set MAP_DEMO_MODE to false
+  //   2. Set MAP_API_BASE to your backend's URL
+  window.MAP_DEMO_MODE = true;
+  window.MAP_API_BASE = ""; // e.g. "https://your-backend.onrender.com" — only used when MAP_DEMO_MODE is false
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/demo-data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/views.js"></script>
+<script src="js/crud.js"></script>
+<script src="js/renderers.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SQL Manufacturing — Real-Time Plant Monitoring & Analytics</title>
+    <meta name="description" content="A SQL-driven monitoring dashboard for the production floor — live OEE, fleet status, downtime analytics, and active alerts across every line." />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#071025" />
+    <link rel="canonical" href="https://example.com/" />
+
+    <!-- Social preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="SQL Manufacturing — Real-Time Plant Monitoring & Analytics" />
+    <meta property="og:description" content="Fleet status, OEE trends, downtime analytics, and live alerts for the production floor — SQL-driven and built to be scanned in seconds." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SQL Manufacturing — Real-Time Plant Monitoring & Analytics" />
+    <meta name="twitter:description" content="Fleet status, OEE trends, downtime analytics, and live alerts for the production floor." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+    <style>
+      :root{
+        --bg:#071025; --bg2:#06121b;
+        --accent:#06b6d4; --accent2:#0ea5a1;
+        --good:#8ef3d9; --warn:#f5b942; --bad:#f56565;
+        --text:#e6eef6; --muted:#94a3b8;
+        --card:rgba(255,255,255,0.02); --card-border:rgba(255,255,255,0.06);
+        --mono:'IBM Plex Mono',ui-monospace,monospace;
+        --radius:12px; --speed:.2s;
+      }
+      *,*::before,*::after{box-sizing:border-box}
+      html{scroll-behavior:smooth}
+      body{
+        margin:0;font-family:Inter,system-ui,"Segoe UI",Arial,sans-serif;
+        background:linear-gradient(180deg,var(--bg),var(--bg2));
+        color:var(--text); line-height:1.5;
+      }
+      .wrap{max-width:1200px;margin:0 auto;padding:36px}
+
+      .skip-link{
+        position:absolute; left:-999px; top:auto; background:var(--accent); color:#042028;
+        padding:10px 16px; border-radius:0 0 8px 0; font-weight:700; z-index:100; text-decoration:none;
+      }
+      .skip-link:focus{left:0; top:0;}
+
+      a{color:inherit}
+      a:focus-visible, button:focus-visible, .machine-card:focus-visible{
+        outline:2px solid var(--accent); outline-offset:2px; border-radius:6px;
+      }
+
+      header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+      .brand{display:flex;gap:12px;align-items:center}
+      .mark{
+        width:44px;height:44px;border-radius:10px;flex:none;
+        background:linear-gradient(135deg,var(--accent),var(--accent2));
+        display:flex;align-items:center;justify-content:center;color:#042028;font-weight:700;
+      }
+      nav{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+      nav a:not(.btn){
+        color:var(--muted); text-decoration:none; padding:8px 4px; border-bottom:2px solid transparent;
+        transition:color var(--speed) ease,border-color var(--speed) ease;
+      }
+      nav a:not(.btn):hover, nav a:not(.btn).is-active{color:var(--text); border-color:var(--accent);}
+
+      .btn{
+        background:var(--accent);color:#042028;padding:10px 14px;border-radius:10px;font-weight:600;
+        text-decoration:none; display:inline-flex; align-items:center; transition:transform var(--speed) ease,box-shadow var(--speed) ease;
+        border:none; cursor:pointer; font-family:inherit; font-size:14px;
+      }
+      .btn:hover{transform:translateY(-1px); box-shadow:0 8px 20px -8px rgba(6,182,212,0.6);}
+
+      .hero{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:center;padding:28px 0 8px}
+      .eyebrow{font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+      h1{margin:8px 0 12px; font-size:clamp(24px,4vw,34px); line-height:1.2}
+      h2{font-size:clamp(18px,2.6vw,22px); margin:0 0 4px;}
+      .section-sub{color:var(--muted); font-size:14px; margin:0 0 18px;}
+      .lead{color:var(--muted);margin:0 0 16px}
+      .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+      .ghost-btn{
+        padding:10px 14px;border-radius:10px;background:transparent;
+        border:1px solid rgba(255,255,255,0.12);color:var(--muted); text-decoration:none;
+        display:inline-flex;align-items:center; transition:border-color var(--speed) ease,color var(--speed) ease;
+      }
+      .ghost-btn:hover{border-color:var(--accent); color:var(--text);}
+
+      section{padding:36px 0; border-top:1px solid rgba(255,255,255,0.06);}
+      .hero{border-top:none;}
+
+      .card{
+        background:var(--card);padding:16px;border-radius:var(--radius);border:1px solid var(--card-border);
+        opacity:0; transform:translateY(8px); transition:opacity .5s ease, transform .5s ease;
+      }
+      .card.is-visible{opacity:1; transform:translateY(0);}
+
+      .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+      .card-title{font-size:12px;color:var(--muted);font-weight:600}
+      .live-badge{
+        font-size:11px;color:var(--good);font-weight:700; display:inline-flex; align-items:center; gap:6px;
+        letter-spacing:0.04em;
+      }
+      .live-dot{
+        width:7px;height:7px;border-radius:50%;background:var(--good);
+        box-shadow:0 0 0 0 rgba(142,243,217,0.6); animation:pulse 2s infinite;
+      }
+      @keyframes pulse{
+        0%{box-shadow:0 0 0 0 rgba(142,243,217,0.5);}
+        70%{box-shadow:0 0 0 8px rgba(142,243,217,0);}
+        100%{box-shadow:0 0 0 0 rgba(142,243,217,0);}
+      }
+
+      .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+      .kpi{padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid transparent;transition:border-color var(--speed) ease}
+      .kpi:hover{border-color:rgba(255,255,255,0.08)}
+      .kpi .l{font-size:12px;color:var(--muted)}
+      .kpi .v{font-weight:700;font-size:1.15rem; font-variant-numeric:tabular-nums;}
+      .kpi .v[data-status="good"]{color:var(--good)}
+      .kpi .v[data-status="warn"]{color:var(--warn)}
+      .kpi .v[data-status="bad"]{color:var(--bad)}
+
+      #sparkChart{width:100%;height:84px;margin-top:12px;display:block}
+
+      /* Plant-wide stat strip */
+      .stat-strip{
+        display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-top:24px;
+      }
+      .stat{
+        background:var(--card); border:1px solid var(--card-border); border-radius:10px; padding:14px;
+        border-top:3px solid var(--accent);
+      }
+      .stat.warn-border{border-top-color:var(--warn)}
+      .stat.bad-border{border-top-color:var(--bad)}
+      .stat .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+      .stat .v{font-size:1.3rem;font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums;}
+      .stat .d{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+      /* Fleet grid */
+      .machines-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+      .machine-card{
+        text-align:left; width:100%; color:var(--text); font-family:inherit;
+        padding:14px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;
+        border:1px solid rgba(255,255,255,0.06); transition:border-color var(--speed) ease, background var(--speed) ease, transform var(--speed) ease;
+      }
+      .machine-card:hover{border-color:var(--accent); background:rgba(255,255,255,0.04); transform:translateY(-2px);}
+      .machine-card .mc-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+      .machine-card .mc-id{font-family:var(--mono); font-size:13px; font-weight:600;}
+      .machine-card .meta{color:var(--muted);font-size:12.5px; margin-top:4px;}
+      .machine-card .oee{font-family:var(--mono); font-size:22px; font-weight:600; margin-top:10px;}
+      .status-pill{
+        font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em;
+        padding:3px 8px; border-radius:20px; white-space:nowrap;
+      }
+      .status-pill.running{background:rgba(142,243,217,0.14); color:var(--good);}
+      .status-pill.idle{background:rgba(245,185,66,0.14); color:var(--warn);}
+      .status-pill.down{background:rgba(245,101,101,0.16); color:var(--bad);}
+      .status-pill.maintenance{background:rgba(148,163,184,0.16); color:var(--muted);}
+
+      /* Analytics grid */
+      .analytics-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+      .analytics-grid .card{grid-column:span 1;}
+      .chart-card canvas{max-height:260px;}
+
+      /* Alerts list */
+      .alerts-list{display:flex; flex-direction:column; gap:10px;}
+      .alert-item{
+        display:flex; gap:14px; align-items:flex-start; padding:14px 16px; border-radius:10px;
+        background:rgba(255,255,255,0.02); border:1px solid var(--card-border); border-left:3px solid var(--muted);
+      }
+      .alert-item.critical{border-left-color:var(--bad);}
+      .alert-item.warning{border-left-color:var(--warn);}
+      .alert-item.info{border-left-color:var(--accent);}
+      .alert-icon{font-size:18px; margin-top:2px; flex:none;}
+      .alert-item.critical .alert-icon{color:var(--bad);}
+      .alert-item.warning .alert-icon{color:var(--warn);}
+      .alert-item.info .alert-icon{color:var(--accent);}
+      .alert-body{flex:1;}
+      .alert-title-row{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+      .alert-title{font-weight:600; font-size:14px;}
+      .alert-time{font-size:12px; color:var(--muted); font-family:var(--mono); white-space:nowrap;}
+      .alert-meta{font-size:13px; color:var(--muted); margin-top:3px;}
+
+      /* Modal */
+      .modal{
+        position:fixed;inset:0;background:rgba(2,6,23,0.72);z-index:60;padding:20px;
+        display:flex; align-items:center; justify-content:center;
+      }
+      .modal[hidden]{display:none;}
+      .modal-dialog{
+        background:#0b1a2b; border:1px solid var(--card-border); border-radius:14px; padding:24px;
+        max-width:440px; width:100%; box-shadow:0 20px 60px -20px rgba(0,0,0,0.6);
+      }
+      .modal-dialog h3{margin:0 0 4px; font-family:var(--mono);}
+      .modal-close{
+        background:transparent;border:1px solid rgba(255,255,255,0.14);color:var(--muted);
+        border-radius:8px; padding:6px 10px; cursor:pointer; float:right; font-size:13px;
+      }
+      .modal-close:hover{color:var(--text); border-color:var(--accent);}
+      .modal-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+      .modal-grid .kpi{background:rgba(255,255,255,0.03);}
+
+      footer{text-align:center;padding:28px 0;color:var(--muted); font-size:13px}
+      footer .updated{display:block; margin-top:4px; font-family:var(--mono); font-size:11.5px;}
+
+      @media (max-width:980px){
+        .machines-grid{grid-template-columns:repeat(2,1fr)}
+        .analytics-grid{grid-template-columns:1fr}
+        .stat-strip{grid-template-columns:repeat(3,1fr)}
+      }
+      @media (max-width:860px){
+        .hero{grid-template-columns:1fr}
+        .wrap{padding:20px}
+      }
+      @media (max-width:600px){
+        .machines-grid{grid-template-columns:1fr}
+        .stat-strip{grid-template-columns:repeat(2,1fr)}
+      }
+      @media (max-width:480px){
+        .kpis{grid-template-columns:1fr}
+        nav{gap:8px}
+      }
+      @media (prefers-reduced-motion: reduce){
+        html{scroll-behavior:auto}
+        .live-dot{animation:none}
+        *,*::before,*::after{transition-duration:.001ms !important; animation-duration:.001ms !important;}
+        .card{opacity:1; transform:none;}
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#home">Skip to main content</a>
+
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <div class="mark" aria-hidden="true">SM</div>
+          <div>
+            <div style="font-weight:700">SQL Manufacturing</div>
+            <div style="font-size:12px;color:var(--muted)">Monitoring &amp; Analytics</div>
+          </div>
+        </div>
+        <nav aria-label="Primary">
+          <a href="#dashboard">Dashboard</a>
+          <a href="#fleet">Fleet</a>
+          <a href="#analytics">Analytics</a>
+          <a href="#alerts">Alerts</a>
+          <a class="btn" href="./frontend/index(1).html" target="_blank" rel="noopener">Launch</a>
+        </nav>
+      </header>
+
+      <main id="home">
+        <section class="hero" id="dashboard">
+          <div>
+            <div class="eyebrow">Real-time · SQL-driven</div>
+            <h1>See your production floor the moment it happens</h1>
+            <p class="lead">Live fleet status, downtime analytics, and open alerts across 3 plants — pulled straight from the SQL event log, refreshed continuously.</p>
+            <div class="cta-row">
+              <a class="btn" href="./frontend/index(1).html" target="_blank" rel="noopener"><i class="bi bi-speedometer2" aria-hidden="true" style="margin-right:8px"></i>Open Dashboard</a>
+              <a class="ghost-btn" href="https://github.com/" aria-label="View source on GitHub"><i class="bi bi-github" aria-hidden="true" style="margin-right:8px"></i>Source</a>
+            </div>
+
+            <div class="stat-strip" aria-label="Plant-wide summary statistics">
+              <div class="stat">
+                <div class="l">Plants</div>
+                <div class="v">3</div>
+                <div class="d">Detroit · Austin · Columbus</div>
+              </div>
+              <div class="stat">
+                <div class="l">Machines Tracked</div>
+                <div class="v">39</div>
+                <div class="d">across 7 machine types</div>
+              </div>
+              <div class="stat warn-border">
+                <div class="l">Downtime This Week</div>
+                <div class="v">55.3 hrs</div>
+                <div class="d">+6.1% vs. last week</div>
+              </div>
+              <div class="stat bad-border">
+                <div class="l">Repair Cost (WTD)</div>
+                <div class="v">$28,940</div>
+                <div class="d">mechanical failure leads</div>
+              </div>
+              <div class="stat">
+                <div class="l">Avg Cycle Time</div>
+                <div class="v">42.6s</div>
+                <div class="d">−1.8s vs. 30-day avg</div>
+              </div>
+              <div class="stat warn-border">
+                <div class="l">Scrap Rate</div>
+                <div class="v">2.4%</div>
+                <div class="d">target ≤ 2.0%</div>
+              </div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card" id="pulseCard" role="group" aria-label="Live plant metrics for Line A">
+              <div class="card-head">
+                <div class="card-title">Plant Pulse — Line A</div>
+                <div class="live-badge"><span class="live-dot" aria-hidden="true"></span>LIVE</div>
+              </div>
+              <div class="kpis">
+                <div class="kpi">
+                  <div class="l">Overall OEE</div>
+                  <div class="v" id="k-oee" data-target="87" data-suffix="%" data-status="good" aria-live="polite">—</div>
+                </div>
+                <div class="kpi">
+                  <div class="l">Units Today</div>
+                  <div class="v" id="k-units" data-target="4260" aria-live="polite">—</div>
+                </div>
+                <div class="kpi">
+                  <div class="l">Machines Active</div>
+                  <div class="v" id="k-machines" data-target="18" data-suffix="/20" aria-live="polite">—</div>
+                </div>
+                <div class="kpi">
+                  <div class="l">Open Alerts</div>
+                  <div class="v" id="k-alerts" data-target="3" data-status="warn" aria-live="polite">—</div>
+                </div>
+              </div>
+              <canvas id="sparkChart" width="300" height="84" role="img" aria-label="Sparkline of OEE trend over the last 24 hours, trending upward"></canvas>
+            </div>
+          </aside>
+        </section>
+
+        <section id="fleet" aria-labelledby="fleet-heading">
+          <h2 id="fleet-heading">Fleet Status</h2>
+          <p class="section-sub">Live status for a sample of tracked machines. Select any card for maintenance and performance detail.</p>
+          <div class="machines-grid" id="machinesGrid"><!-- populated by JS from machineData --></div>
+        </section>
+
+        <section id="analytics" aria-labelledby="analytics-heading">
+          <h2 id="analytics-heading">Downtime Analytics</h2>
+          <p class="section-sub">14-day OEE trend, downtime hours by root cause, and throughput by shift — the same slices available in the full dashboard.</p>
+          <div class="analytics-grid">
+            <div class="card chart-card is-visible" style="grid-column:1 / -1;">
+              <div class="card-title" style="margin-bottom:10px;">OEE Trend — Last 14 Days</div>
+              <canvas id="oeeTrendChart" role="img" aria-label="Line chart of overall equipment effectiveness over the last 14 days, rising from about 74% to 91%"></canvas>
+            </div>
+            <div class="card chart-card is-visible">
+              <div class="card-title" style="margin-bottom:10px;">Downtime Hours by Reason (This Week)</div>
+              <canvas id="downtimeReasonChart" role="img" aria-label="Horizontal bar chart of downtime hours by reason, led by mechanical failure at 18.4 hours"></canvas>
+            </div>
+            <div class="card chart-card is-visible">
+              <div class="card-title" style="margin-bottom:10px;">Throughput by Shift (Units, Today)</div>
+              <canvas id="throughputShiftChart" role="img" aria-label="Bar chart of units produced by shift: morning 1620, afternoon 1540, night 1100"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section id="alerts" aria-labelledby="alerts-heading">
+          <h2 id="alerts-heading">Active Alerts</h2>
+          <p class="section-sub">5 open items across the fleet, newest first.</p>
+          <div class="alerts-list" id="alertsList"><!-- populated by JS from alertData --></div>
+        </section>
+      </main>
+
+      <footer>
+        © <span id="year"></span> SQL Manufacturing
+        <span class="updated" id="lastUpdated"></span>
+      </footer>
+    </div>
+
+    <!-- Machine detail modal (opened from Fleet Status cards) -->
+    <div class="modal" id="machineModal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-dialog">
+        <button class="modal-close" id="modalClose" type="button">Close ✕</button>
+        <h3 id="modalTitle">—</h3>
+        <div class="meta" id="modalMeta">—</div>
+        <div class="modal-grid" id="modalGrid"><!-- populated by JS --></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // ---- Demo data -----------------------------------------------------
+        // Replace these arrays with a live feed (e.g. a JSON endpoint backed by
+        // the SQL event log) when wiring this preview up to the real system.
+        var machineData = [
+          { id: 'M-104', type: 'CNC Machine', plant: 'Detroit · Line A', status: 'running', oee: 91, uptime: '18h 42m', nextPM: 'Mar 14, 2026', lastEvent: 'Changeover completed 2h ago' },
+          { id: 'M-107', type: 'Robotic Welder', plant: 'Detroit · Line A', status: 'running', oee: 84, uptime: '11h 05m', nextPM: 'Feb 28, 2026', lastEvent: 'Nominal operation' },
+          { id: 'M-112', type: 'Injection Molder', plant: 'Austin · Line B', status: 'idle', oee: 62, uptime: '3h 20m', nextPM: 'Mar 02, 2026', lastEvent: 'OEE below 70% threshold' },
+          { id: 'M-118', type: 'Hydraulic Press', plant: 'Austin · Line B', status: 'running', oee: 88, uptime: '20h 10m', nextPM: 'Mar 21, 2026', lastEvent: 'Nominal operation' },
+          { id: 'M-121', type: 'Packaging Unit', plant: 'Columbus · Line C', status: 'down', oee: 0, uptime: '0h 00m', nextPM: 'Feb 24, 2026', lastEvent: 'Sensor fault — offline 42 min' },
+          { id: 'M-125', type: 'Conveyor Belt', plant: 'Columbus · Line C', status: 'running', oee: 95, uptime: '22h 55m', nextPM: 'Apr 03, 2026', lastEvent: 'Nominal operation' },
+          { id: 'M-130', type: 'CNC Machine', plant: 'Detroit · Line A', status: 'running', oee: 79, uptime: '15h 33m', nextPM: 'Mar 09, 2026', lastEvent: 'Vibration anomaly flagged for review' },
+          { id: 'M-133', type: 'Welding Robot', plant: 'Austin · Line B', status: 'maintenance', oee: 0, uptime: '0h 00m', nextPM: 'In progress', lastEvent: 'Scheduled PM started 1h ago' }
+        ];
+
+        var alertData = [
+          { level: 'critical', icon: 'bi-exclamation-octagon-fill', title: 'Sensor fault — M-121 Packaging Unit', meta: 'Columbus · Line C · offline 42 min', time: '6 min ago' },
+          { level: 'warning', icon: 'bi-graph-down', title: 'OEE below threshold — M-112 Injection Molder', meta: 'Austin · Line B · currently 62% (target ≥ 70%)', time: '24 min ago' },
+          { level: 'warning', icon: 'bi-activity', title: 'Vibration anomaly — M-130 CNC Machine', meta: 'Detroit · Line A · flagged for maintenance review', time: '1h ago' },
+          { level: 'info', icon: 'bi-tools', title: 'Scheduled PM in progress — M-133 Welding Robot', meta: 'Austin · Line B · estimated completion in 2h', time: '1h ago' },
+          { level: 'info', icon: 'bi-check2-circle', title: 'Changeover completed — M-104 CNC Machine', meta: 'Detroit · Line A · resumed production', time: '2h ago' }
+        ];
+
+        var oeeTrend14d = [74, 76, 75, 78, 80, 79, 82, 85, 83, 86, 88, 87, 89, 91];
+        var downtimeByReason = [
+          { reason: 'Mechanical Failure', hours: 18.4 },
+          { reason: 'Changeover / Setup', hours: 12.1 },
+          { reason: 'Material Shortage', hours: 9.7 },
+          { reason: 'Electrical Fault', hours: 7.3 },
+          { reason: 'Operator Error', hours: 4.6 },
+          { reason: 'Software Error', hours: 3.2 }
+        ];
+        var throughputByShift = [
+          { shift: 'Morning', units: 1620 },
+          { shift: 'Afternoon', units: 1540 },
+          { shift: 'Night', units: 1100 }
+        ];
+
+        // ---- Footer / timestamp --------------------------------------------
+        var yearEl = document.getElementById('year');
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+        var updatedEl = document.getElementById('lastUpdated');
+        if (updatedEl) {
+          updatedEl.textContent = 'Data refreshed ' + new Date().toLocaleString(undefined, {
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+        }
+
+        // ---- Reveal hero card ------------------------------------------------
+        var pulseCard = document.getElementById('pulseCard');
+        if (pulseCard) requestAnimationFrame(function () { pulseCard.classList.add('is-visible'); });
+
+        // ---- KPI count-up ------------------------------------------------
+        function animateValue(el, from, to, suffix, duration) {
+          suffix = suffix || '';
+          if (reduceMotion || duration <= 0) {
+            el.textContent = to.toLocaleString() + suffix;
+            return;
+          }
+          var start = null;
+          function step(ts) {
+            if (start === null) start = ts;
+            var progress = Math.min((ts - start) / duration, 1);
+            var eased = 1 - Math.pow(1 - progress, 3);
+            var current = Math.round(from + (to - from) * eased);
+            el.textContent = current.toLocaleString() + suffix;
+            if (progress < 1) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        }
+        document.querySelectorAll('.kpi .v[data-target]').forEach(function (el) {
+          var target = parseFloat(el.getAttribute('data-target'));
+          var suffix = el.getAttribute('data-suffix') || '';
+          animateValue(el, 0, target, suffix, 900);
+        });
+
+        // ---- Hero sparkline (hand-rolled — one line, no library needed) ----
+        var canvas = document.getElementById('sparkChart');
+        if (canvas && canvas.getContext) {
+          var ctx = canvas.getContext('2d');
+          var dpr = window.devicePixelRatio || 1;
+          var cssWidth = canvas.clientWidth || 300;
+          var cssHeight = canvas.clientHeight || 84;
+          canvas.width = cssWidth * dpr;
+          canvas.height = cssHeight * dpr;
+          ctx.scale(dpr, dpr);
+
+          var points = [61, 64, 63, 68, 72, 70, 74, 78, 76, 81, 84, 87];
+          var max = Math.max.apply(null, points);
+          var min = Math.min.apply(null, points);
+          var pad = 6;
+          var w = cssWidth - pad * 2;
+          var h = cssHeight - pad * 2;
+          function xFor(i) { return pad + (w * i) / (points.length - 1); }
+          function yFor(v) { return pad + h - ((v - min) / (max - min || 1)) * h; }
+
+          ctx.clearRect(0, 0, cssWidth, cssHeight);
+          var gradient = ctx.createLinearGradient(0, 0, 0, cssHeight);
+          gradient.addColorStop(0, 'rgba(6,182,212,0.35)');
+          gradient.addColorStop(1, 'rgba(6,182,212,0)');
+          ctx.beginPath();
+          ctx.moveTo(xFor(0), yFor(points[0]));
+          points.forEach(function (v, i) { ctx.lineTo(xFor(i), yFor(v)); });
+          ctx.lineTo(xFor(points.length - 1), cssHeight - pad);
+          ctx.lineTo(xFor(0), cssHeight - pad);
+          ctx.closePath();
+          ctx.fillStyle = gradient;
+          ctx.fill();
+
+          ctx.beginPath();
+          points.forEach(function (v, i) {
+            var x = xFor(i), y = yFor(v);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = '#06b6d4';
+          ctx.lineWidth = 2;
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+
+          var lastX = xFor(points.length - 1), lastY = yFor(points[points.length - 1]);
+          ctx.beginPath();
+          ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#8ef3d9';
+          ctx.fill();
+        }
+
+        // ---- Fleet grid ------------------------------------------------
+        var statusLabel = { running: 'Running', idle: 'Idle', down: 'Down', maintenance: 'Maintenance' };
+        var grid = document.getElementById('machinesGrid');
+        machineData.forEach(function (m, i) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'machine-card';
+          btn.setAttribute('aria-haspopup', 'dialog');
+          btn.innerHTML =
+            '<div class="mc-head">' +
+              '<span class="mc-id">' + m.id + '</span>' +
+              '<span class="status-pill ' + m.status + '">' + statusLabel[m.status] + '</span>' +
+            '</div>' +
+            '<div class="meta">' + m.type + ' · ' + m.plant + '</div>' +
+            '<div class="oee" data-status="' + (m.oee >= 80 ? 'good' : m.oee >= 60 ? 'warn' : 'bad') + '" style="color:' +
+              (m.oee >= 80 ? 'var(--good)' : m.oee >= 60 ? 'var(--warn)' : 'var(--bad)') + '">' +
+              (m.status === 'running' || m.status === 'idle' ? m.oee + '% OEE' : '—') +
+            '</div>';
+          btn.addEventListener('click', function () { openMachineModal(m, btn); });
+          grid.appendChild(btn);
+        });
+
+        // ---- Modal ------------------------------------------------
+        var modal = document.getElementById('machineModal');
+        var modalTitle = document.getElementById('modalTitle');
+        var modalMeta = document.getElementById('modalMeta');
+        var modalGrid = document.getElementById('modalGrid');
+        var modalClose = document.getElementById('modalClose');
+        var lastFocused = null;
+
+        function openMachineModal(m, triggerEl) {
+          lastFocused = triggerEl || document.activeElement;
+          modalTitle.textContent = m.id + ' — ' + m.type;
+          modalMeta.textContent = m.plant;
+          modalGrid.innerHTML =
+            '<div class="kpi"><div class="l">Status</div><div class="v">' + statusLabel[m.status] + '</div></div>' +
+            '<div class="kpi"><div class="l">OEE</div><div class="v">' + (m.oee ? m.oee + '%' : '—') + '</div></div>' +
+            '<div class="kpi"><div class="l">Uptime Today</div><div class="v">' + m.uptime + '</div></div>' +
+            '<div class="kpi"><div class="l">Next PM</div><div class="v" style="font-size:0.95rem">' + m.nextPM + '</div></div>' +
+            '<div class="kpi" style="grid-column:1 / -1;"><div class="l">Last Event</div><div class="v" style="font-size:0.95rem; font-weight:600;">' + m.lastEvent + '</div></div>';
+          modal.hidden = false;
+          modalClose.focus();
+          document.addEventListener('keydown', onModalKeydown);
+        }
+        function closeMachineModal() {
+          modal.hidden = true;
+          document.removeEventListener('keydown', onModalKeydown);
+          if (lastFocused) lastFocused.focus();
+        }
+        function onModalKeydown(e) {
+          if (e.key === 'Escape') closeMachineModal();
+        }
+        modalClose.addEventListener('click', closeMachineModal);
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeMachineModal(); });
+
+        // ---- Alerts list ------------------------------------------------
+        var alertsList = document.getElementById('alertsList');
+        alertData.forEach(function (a) {
+          var item = document.createElement('div');
+          item.className = 'alert-item ' + a.level;
+          item.innerHTML =
+            '<i class="bi ' + a.icon + ' alert-icon" aria-hidden="true"></i>' +
+            '<div class="alert-body">' +
+              '<div class="alert-title-row"><span class="alert-title">' + a.title + '</span><span class="alert-time">' + a.time + '</span></div>' +
+              '<div class="alert-meta">' + a.meta + '</div>' +
+            '</div>';
+          alertsList.appendChild(item);
+        });
+
+        // ---- Analytics charts (Chart.js) ------------------------------------------------
+        function renderCharts() {
+          if (typeof Chart === 'undefined') return; // CDN blocked/offline — page still fully usable without it
+
+          Chart.defaults.color = '#94a3b8';
+          Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+          Chart.defaults.animation = reduceMotion ? false : { duration: 700 };
+
+          new Chart(document.getElementById('oeeTrendChart'), {
+            type: 'line',
+            data: {
+              labels: oeeTrend14d.map(function (_, i) { return 'D' + (i + 1); }),
+              datasets: [{
+                label: 'OEE %',
+                data: oeeTrend14d,
+                borderColor: '#06b6d4',
+                backgroundColor: 'rgba(6,182,212,0.15)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 2,
+                pointBackgroundColor: '#8ef3d9'
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, suggestedMin: 60, suggestedMax: 100 }
+              }
+            }
+          });
+
+          new Chart(document.getElementById('downtimeReasonChart'), {
+            type: 'bar',
+            data: {
+              labels: downtimeByReason.map(function (d) { return d.reason; }),
+              datasets: [{
+                label: 'Hours',
+                data: downtimeByReason.map(function (d) { return d.hours; }),
+                backgroundColor: '#f5b942'
+              }]
+            },
+            options: {
+              indexAxis: 'y',
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { grid: { display: false } }
+              }
+            }
+          });
+
+          new Chart(document.getElementById('throughputShiftChart'), {
+            type: 'bar',
+            data: {
+              labels: throughputByShift.map(function (d) { return d.shift; }),
+              datasets: [{
+                label: 'Units',
+                data: throughputByShift.map(function (d) { return d.units; }),
+                backgroundColor: '#0ea5a1'
+              }]
+            },
+            options: {
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' } }
+              }
+            }
+          });
+        }
+
+        if (typeof Chart !== 'undefined') {
+          renderCharts();
+        } else {
+          // Chart.js loads with `defer`; give it a tick after DOMContentLoaded before giving up
+          window.addEventListener('load', renderCharts);
+        }
+
+        // ---- Active nav highlight on scroll ------------------------------------------------
+        var sections = ['dashboard', 'fleet', 'analytics', 'alerts'].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+        var navLinks = Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+        if ('IntersectionObserver' in window && sections.length) {
+          var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                navLinks.forEach(function (link) {
+                  link.classList.toggle('is-active', link.getAttribute('href') === '#' + entry.target.id);
+                });
+              }
+            });
+          }, { rootMargin: '-40% 0px -50% 0px' });
+          sections.forEach(function (s) { observer.observe(s); });
+        }
+      })();
+    </script>
+  </body>
+</html>

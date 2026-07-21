@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SQL Manufacturing — Preview</title>
+    <meta name="description" content="Responsive preview for SQL Manufacturing dashboard." />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+      :root{--bg:#071025;--accent:#06b6d4;--muted:#94a3b8;--card:rgba(255,255,255,0.02)}
+      *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:linear-gradient(180deg,var(--bg),#06121b);color:#e6eef6}
+      .wrap{max-width:1100px;margin:0 auto;padding:36px}
+      header{display:flex;align-items:center;justify-content:space-between}
+      .brand{display:flex;gap:12px;align-items:center}
+      .mark{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#0ea5a1);display:flex;align-items:center;justify-content:center;color:#042028;font-weight:700}
+      nav{display:flex;gap:12px}
+      .btn{background:var(--accent);color:#042028;padding:10px 14px;border-radius:10px;font-weight:600}
+      .hero{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:center;padding:28px 0}
+      .lead{color:var(--muted);margin:0 0 16px}
+      .card{background:var(--card);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+      .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+      .kpi{padding:10px;background:rgba(255,255,255,0.01);border-radius:8px}
+      .kpi .v{font-weight:700;font-size:1.1rem}
+      footer{text-align:center;padding:28px 0;color:var(--muted)}
+      @media(max-width:860px){.hero{grid-template-columns:1fr}.wrap{padding:20px}}
+      .machines-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+      .machine-card{padding:10px;border-radius:8px;background:rgba(255,255,255,0.01);cursor:pointer;border:1px solid rgba(255,255,255,0.02)}
+      .machine-card .meta{color:var(--muted);font-size:12px}
+      .modal{position:fixed;inset:0;background:rgba(2,6,23,0.6);z-index:60;padding:20px}
+      @media(max-width:860px){.machines-grid{grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <div class="mark">SM</div>
+          <div>
+            <div style="font-weight:700">SQL Manufacturing</div>
+            <div style="font-size:12px;color:var(--muted)">Monitoring & Analytics</div>
+          </div>
+        </div>
+        <nav>
+          <a href="#dashboard" style="color:var(--muted)">Dashboard</a>
+          <a href="#analytics" style="color:var(--muted)">Analytics</a>
+          <a href="#alerts" style="color:var(--muted)">Alerts</a>
+          <a class="btn" href="frontend/index.html" target="_blank" rel="noopener">Launch</a>
+        </nav>
+      </header>
+      <main>
+        <section class="hero" id="home">
+          <div>
+            <div style="font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:0.08em">Real-time · SQL-driven</div>
+            <h1 style="margin:8px 0 12px">See your production floor the moment it happens</h1>
+            <p class="lead">Clean, focused metrics and small charts for quick operational awareness.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <a class="btn" href="#dashboard"><i class="bi bi-speedometer2" style="margin-right:8px"></i>View Dashboard</a>
+              <a href="https://github.com/" style="padding:10px 14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)"><i class="bi bi-github" style="margin-right:8px"></i>Source</a>
+            </div>
+          </div>
+          <aside>
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div style="font-size:12px;color:var(--muted);font-weight:600">Plant Pulse — Line A</div>
+                <div style="font-size:12px;color:#8ef3d9;font-weight:700">LIVE</div>
+              </div>
+              <div class="kpis">
+                <div class="kpi"><div class="l">Overall OEE</div><div class="v" id="k-oee">—</div></div>
+                <div class="kpi"><div class="l">Units Today</div><div class="v" id="k-units">—</div></div>
+                <div class="kpi"><div class="l">Machines Active</div><div class="v" id="k-machines">—</div></div>
+                <div class="kpi"><div class="l">Open Alerts</div><div class="v" id="k-alerts">—</div></div>
+              </div>
+              <canvas id="sparkChart" style="width:100%;height:84px;margin-top:12px"></canvas>
+            </div>
+          </aside>
+        </section>
+      </main>
+      <footer style="margin-top:28px">© <span id="year"></span> SQL Manufacturing</footer>
+    </div>
+  </body>
+</html>

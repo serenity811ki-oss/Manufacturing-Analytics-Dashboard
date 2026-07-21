@@ -1,9 +1,4 @@
 # Manufacturing Analytics Platform
-log in code 
-Username and Password
-For Admin- admin / Admin123! 
-For Manager- manager / Manager123!
-For Technician- technician / Tech123!`
 
 An enterprise-grade manufacturing analytics system with a FastAPI + PostgreSQL
 backend and a responsive Chart.js dashboard — production monitoring, OEE,
@@ -11,6 +6,32 @@ predictive maintenance, downtime root-cause analysis, quality/scrap tracking,
 and exportable reports.
 
 ![stack](https://img.shields.io/badge/backend-FastAPI-0E7C86) ![stack](https://img.shields.io/badge/db-PostgreSQL-16283B) ![stack](https://img.shields.io/badge/orm-SQLAlchemy-2C3E50) ![stack](https://img.shields.io/badge/frontend-Chart.js-D98E1F)
+
+---
+
+## See it working right now (no setup)
+
+Open `frontend/index.html` in any browser — double-click the file, or drag it
+into a browser tab. **Demo mode is on by default**, so the entire dashboard
+runs with realistic sample data generated in your browser. No backend, no
+database, no deployment, nothing to install.
+
+Log in with `admin` / `Admin123!` (or `manager`/`Manager123!`,
+`technician`/`Tech123!`). Every screen — OEE, downtime, maintenance, quality,
+CRUD forms — works immediately. This is genuinely the whole app; only the
+data source is simulated.
+
+**When you're ready to connect a real PostgreSQL database and your own
+production data**, open `frontend/index.html`, find this block near the
+bottom, and change two lines:
+```html
+<script>
+  window.MAP_DEMO_MODE = false;                              // turn demo mode off
+  window.MAP_API_BASE = "https://your-backend.onrender.com";  // your deployed backend
+</script>
+```
+Then follow [Quick start (Docker)](#quick-start-docker) or
+[Manual setup](#manual-setup) below to actually stand up that backend.
 
 ---
 

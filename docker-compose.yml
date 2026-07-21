@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: map_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: map_user
+      POSTGRES_PASSWORD: change_me
+      POSTGRES_DB: manufacturing_db
+    volumes:
+      - map_pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U map_user -d manufacturing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./frontend/backend
+    container_name: map_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://map_user:change_me@db:5432/manufacturing_db
+      SECRET_KEY: change_this_secret_in_production
+      ACCESS_TOKEN_EXPIRE_MINUTES: 480
+      CORS_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./frontend:/frontend:ro
+    command: >
+      sh -c "python -m app.seed_data && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  map_pgdata:
